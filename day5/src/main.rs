@@ -3,7 +3,7 @@ use day5::intcode;
 fn main() {
     let mut intcodes = day5::data::get_intcodes();
 
-    puzzle1(&mut intcodes);
+    puzzle2(&mut intcodes);
 }
 
 fn _echo_test() {
@@ -12,7 +12,12 @@ fn _echo_test() {
     intcode::run(&mut intcodes);
 }
 
-fn puzzle1(intcodes: &mut [intcode::Int]) {
+fn _puzzle1(intcodes: &mut [intcode::Int]) {
     println!("(enter 1)");
+    intcode::run(intcodes)
+}
+
+fn puzzle2(intcodes: &mut [intcode::Int]) {
+    println!("(enter 5)");
     intcode::run(intcodes)
 }

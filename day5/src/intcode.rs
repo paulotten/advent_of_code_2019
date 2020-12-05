@@ -9,6 +9,11 @@ const ADD: Int = 1;
 const MULT: Int = 2;
 const INPUT: Int = 3;
 const OUTPUT: Int = 4;
+const JUMP_TRUE: Int = 5;
+const JUMP_FALSE: Int = 6;
+const LESS_THAN: Int = 7;
+const EQUAL: Int = 8;
+
 const HALT: Int = 99;
 
 pub fn run(intcodes: &mut [Int]) {
@@ -75,6 +80,50 @@ pub fn run(intcodes: &mut [Int]) {
                 println!("{}", a);
 
                 position += 2;
+            },
+            JUMP_TRUE => {
+                let a = get_param(intcodes, position+1, modes[0]);
+                let b = get_param(intcodes, position+2, modes[1]);
+
+                if a > 0 {
+                    position = b;
+                } else {
+                    position += 3;
+                }
+            },
+            JUMP_FALSE => {
+                let a = get_param(intcodes, position+1, modes[0]);
+                let b = get_param(intcodes, position+2, modes[1]);
+
+                if a == 0 {
+                    position = b;
+                } else {
+                    position += 3;
+                }
+            },
+            LESS_THAN => {
+                let a = get_param(intcodes, position+1, modes[0]);
+                let b = get_param(intcodes, position+2, modes[1]);
+
+                let output_position = intcodes[position as usize + 3];
+                intcodes[output_position as usize] = match a < b {
+                    true => 1,
+                    false => 0,
+                };
+
+                position += 4;
+            },
+            EQUAL => {
+                let a = get_param(intcodes, position+1, modes[0]);
+                let b = get_param(intcodes, position+2, modes[1]);
+
+                let output_position = intcodes[position as usize + 3];
+                intcodes[output_position as usize] = match a == b {
+                    true => 1,
+                    false => 0,
+                };
+
+                position += 4;
             },
             HALT => break,
             _ => panic!("unknown intcode {}", intcode),
