@@ -3,39 +3,50 @@ An intcode computer as described by https://adventofcode.com/2019/day/2
 Updated for https://adventofcode.com/2019/day/5
 */
 
-const ADD: usize = 1;
-const MULT: usize = 2;
-const INPUT: usize = 3;
-const OUTPUT: usize = 4;
-const HALT: usize = 99;
+pub type Int = i64;
 
-pub fn run(intcodes: &mut Vec<usize>) {
-    let mut position = 0;
+const ADD: Int = 1;
+const MULT: Int = 2;
+const INPUT: Int = 3;
+const OUTPUT: Int = 4;
+const HALT: Int = 99;
+
+pub fn run(intcodes: &mut [Int]) {
+    let mut position: Int = 0;
 
     loop {
-        let intcode = intcodes[position];
+        let mode_and_code = intcodes[position as usize];
+        let intcode = mode_and_code % 100;
+
+        let mut modes: Vec<u8> = vec!();
+        let mut i = 100;
+        while i <= 10_000 {
+            modes.push((mode_and_code / i % 10) as u8);
+
+            i *= 10;
+        }
 
         match intcode {
             ADD => {
-                let a = intcodes[intcodes[position+1]];
-                let b = intcodes[intcodes[position+2]];
+                let a = get_param(intcodes, position+1, modes[0]);
+                let b = get_param(intcodes, position+2, modes[1]);
 
-                let output_position = intcodes[position+3];
-                intcodes[output_position] = a + b;
+                let output_position = intcodes[position as usize + 3];
+                intcodes[output_position as usize] = a + b;
 
                 position += 4;
             },
             MULT => {
-                let a = intcodes[intcodes[position+1]];
-                let b = intcodes[intcodes[position+2]];
+                let a = get_param(intcodes, position+1, modes[0]);
+                let b = get_param(intcodes, position+2, modes[1]);
 
-                let output_position = intcodes[position+3];
-                intcodes[output_position] = a * b;
+                let output_position = intcodes[position as usize + 3];
+                intcodes[output_position as usize] = a * b;
 
                 position += 4;
             },
             INPUT => {
-                let intput: usize;
+                let intput: Int;
                 let mut input: String;
 
                 loop {
@@ -44,7 +55,7 @@ pub fn run(intcodes: &mut Vec<usize>) {
                     input = String::new();
                     if std::io::stdin().read_line(&mut input).is_ok() {
                         input = input.trim().to_string();
-                        let maybe_int: Result<usize, _> = input.parse();
+                        let maybe_int: Result<Int, _> = input.parse();
 
                         if maybe_int.is_ok() {
                             intput = maybe_int.unwrap();
@@ -53,13 +64,13 @@ pub fn run(intcodes: &mut Vec<usize>) {
                     }
                 }
 
-                let output_position = intcodes[position+1];
-                intcodes[output_position] = intput;
+                let output_position = intcodes[position as usize + 1];
+                intcodes[output_position as usize] = intput;
 
                 position += 2;
             },
             OUTPUT => {
-                let a = intcodes[intcodes[position+1]];
+                let a = get_param(intcodes, position+1, modes[0]);
 
                 println!("{}", a);
 
@@ -68,5 +79,13 @@ pub fn run(intcodes: &mut Vec<usize>) {
             HALT => break,
             _ => panic!("unknown intcode {}", intcode),
         };
+    }
+}
+
+fn get_param(intcodes: &mut [Int], position: Int, mode: u8) -> Int {
+    match mode {
+        0 => intcodes[intcodes[position as usize] as usize],
+        1 => intcodes[position as usize],
+        _ => panic!("unknown mode"),
     }
 }
