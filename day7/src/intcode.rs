@@ -9,7 +9,9 @@ pub type Int = i64;
 pub struct Computer {
     intcodes: Vec<Int>,
     input_ints: Vec<Int>,
+    inputs_read: usize,
     print_output: bool,
+    position: Int,
 }
 
 const ADD: Int = 1;
@@ -28,7 +30,9 @@ impl Computer {
         Computer {
             intcodes: vec!(),
             input_ints: vec!(),
+            inputs_read: 0,
             print_output: true,
+            position: 0,
         }
     }
 
@@ -36,21 +40,17 @@ impl Computer {
         self.intcodes = intcodes;
     }
 
-    pub fn set_inputs(&mut self, inputs: Vec<Int>) {
-        self.input_ints = inputs;
+    pub fn add_input(&mut self, input: Int) {
+        self.input_ints.push(input);
     }
 
     pub fn set_print_output(&mut self, print_output: bool) {
         self.print_output = print_output;
     }
 
-    pub fn run(&mut self) -> Vec<Int> {
-        let mut position: Int = 0;
-        let mut inputs_read = 0;
-        let mut outputs: Vec<Int> = vec!();
-    
+    pub fn run(&mut self) -> Option<Int> {
         loop {
-            let mode_and_code = self.intcodes[position as usize];
+            let mode_and_code = self.intcodes[self.position as usize];
             let intcode = mode_and_code % 100;
     
             let mut modes: Vec<u8> = vec!();
@@ -63,27 +63,27 @@ impl Computer {
     
             match intcode {
                 ADD => {
-                    let a = self.get_param(position+1, modes[0]);
-                    let b = self.get_param(position+2, modes[1]);
+                    let a = self.get_param(self.position+1, modes[0]);
+                    let b = self.get_param(self.position+2, modes[1]);
     
-                    let output_position = self.intcodes[position as usize + 3];
+                    let output_position = self.intcodes[self.position as usize + 3];
                     self.intcodes[output_position as usize] = a + b;
     
-                    position += 4;
+                    self.position += 4;
                 },
                 MULT => {
-                    let a = self.get_param(position+1, modes[0]);
-                    let b = self.get_param(position+2, modes[1]);
+                    let a = self.get_param(self.position+1, modes[0]);
+                    let b = self.get_param(self.position+2, modes[1]);
     
-                    let output_position = self.intcodes[position as usize + 3];
+                    let output_position = self.intcodes[self.position as usize + 3];
                     self.intcodes[output_position as usize] = a * b;
     
-                    position += 4;
+                    self.position += 4;
                 },
                 INPUT => {
                     let input_int: Int;
 
-                    if inputs_read >= self.input_ints.len() {
+                    if self.inputs_read >= self.input_ints.len() {
                         let mut input: String;
         
                         loop {
@@ -101,75 +101,76 @@ impl Computer {
                             }
                         }
                     } else {
-                        input_int = self.input_ints[inputs_read];
+                        input_int = self.input_ints[self.inputs_read];
                     }
-                    inputs_read += 1;
+                    self.inputs_read += 1;
 
-                    let output_position = self.intcodes[position as usize + 1];
+                    let output_position = self.intcodes[self.position as usize + 1];
                     self.intcodes[output_position as usize] = input_int;
     
-                    position += 2;
+                    self.position += 2;
                 },
                 OUTPUT => {
-                    let a = self.get_param(position+1, modes[0]);
+                    let a = self.get_param(self.position+1, modes[0]);
     
                     if self.print_output {
                         println!("{}", a);
                     }
-                    outputs.push(a);
     
-                    position += 2;
+                    self.position += 2;
+
+                    return Some(a);
                 },
                 JUMP_TRUE => {
-                    let a = self.get_param(position+1, modes[0]);
-                    let b = self.get_param(position+2, modes[1]);
+                    let a = self.get_param(self.position+1, modes[0]);
+                    let b = self.get_param(self.position+2, modes[1]);
     
                     if a > 0 {
-                        position = b;
+                        self.position = b;
                     } else {
-                        position += 3;
+                        self.position += 3;
                     }
                 },
                 JUMP_FALSE => {
-                    let a = self.get_param(position+1, modes[0]);
-                    let b = self.get_param(position+2, modes[1]);
+                    let a = self.get_param(self.position+1, modes[0]);
+                    let b = self.get_param(self.position+2, modes[1]);
     
                     if a == 0 {
-                        position = b;
+                        self.position = b;
                     } else {
-                        position += 3;
+                        self.position += 3;
                     }
                 },
                 LESS_THAN => {
-                    let a = self.get_param(position+1, modes[0]);
-                    let b = self.get_param(position+2, modes[1]);
+                    let a = self.get_param(self.position+1, modes[0]);
+                    let b = self.get_param(self.position+2, modes[1]);
     
-                    let output_position = self.intcodes[position as usize + 3];
+                    let output_position = self.intcodes[self.position as usize + 3];
                     self.intcodes[output_position as usize] = match a < b {
                         true => 1,
                         false => 0,
                     };
     
-                    position += 4;
+                    self.position += 4;
                 },
                 EQUAL => {
-                    let a = self.get_param(position+1, modes[0]);
-                    let b = self.get_param(position+2, modes[1]);
+                    let a = self.get_param(self.position+1, modes[0]);
+                    let b = self.get_param(self.position+2, modes[1]);
     
-                    let output_position = self.intcodes[position as usize + 3];
+                    let output_position = self.intcodes[self.position as usize + 3];
                     self.intcodes[output_position as usize] = match a == b {
                         true => 1,
                         false => 0,
                     };
     
-                    position += 4;
+                    self.position += 4;
                 },
                 HALT => break,
                 _ => panic!("unknown intcode {}", intcode),
             };
         }
 
-        outputs
+        None
     }
     
     fn get_param(&self, position: Int, mode: u8) -> Int {

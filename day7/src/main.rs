@@ -7,10 +7,10 @@ fn main() {
     let intcodes = data::get_intcodes();
     //let intcodes = data::_sample();
 
-    puzzle1(inputs, intcodes);
+    puzzle2(inputs, intcodes);
 }
 
-fn puzzle1(inputs: Vec<Vec<intcode::Int>>, intcodes: Vec<intcode::Int>) {
+fn _puzzle1(inputs: Vec<Vec<intcode::Int>>, intcodes: Vec<intcode::Int>) {
     let mut max = 0;
 
     for inputs in inputs {
@@ -20,12 +20,52 @@ fn puzzle1(inputs: Vec<Vec<intcode::Int>>, intcodes: Vec<intcode::Int>) {
             let mut computer = intcode::Computer::new();
 
             computer.set_intcodes(intcodes.clone());
-            computer.set_inputs(vec!(inputs[i], last_output));
+            computer.add_input(inputs[i]);
+            computer.add_input(last_output);
             computer.set_print_output(false);
 
             let output = computer.run();
-            assert!(output.len() == 1);
-            last_output = output[0];
+            assert!(output.is_some());
+            last_output = output.unwrap();
+        }
+
+        if last_output > max {
+            max = last_output;
+        }
+    }
+
+    println!("{}", max);
+}
+
+fn puzzle2(inputs: Vec<Vec<intcode::Int>>, intcodes: Vec<intcode::Int>) {
+    let mut max = 0;
+
+    for inputs in inputs {
+        let mut last_output = 0;
+        let mut computers: Vec<intcode::Computer> = vec!();
+
+        for i in 0..5 {
+            let mut computer = intcode::Computer::new();
+            computer.set_intcodes(intcodes.clone());
+            computer.add_input(inputs[i]+5);
+
+            computers.push(computer);
+        }
+
+        let mut i = 0;
+        loop {
+            computers[i].add_input(last_output);
+            computers[i].set_print_output(false);
+
+            let output = computers[i].run();
+
+            if output.is_none() {
+                break;
+            }
+
+            last_output = output.unwrap();
+
+            i = (i + 1) % 5;
         }
 
         if last_output > max {
