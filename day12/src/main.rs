@@ -62,9 +62,9 @@ fn simulate_step(moons: &mut Vec<Moon>) {
     }
 
     // update positions
-    for i in 0..moons.len() {
+    for moon in moons {
         for axis in 0..3 {
-            moons[i].pos[axis] += moons[i].vel[axis];
+            moon.pos[axis] += moon.vel[axis];
         }
     }
 }
