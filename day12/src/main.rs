@@ -1,17 +1,24 @@
 mod data;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Moon {
     pos: [i32; 3],
     vel: [i32; 3],
 }
 
 fn main() {
-    // part 1, sample 1
+    //_part1();
+    part2();
+}
+
+fn _part1() {
+    // sample 1
+    // result 179
     //let data = data::_get_sample1();
     //let steps = 10;
 
-    // part 1
+    // puzzle data
+    // result 12082
     let data = data::get_data();
     let steps = 1000;
 
@@ -21,7 +28,39 @@ fn main() {
         simulate_step(moons);
     }
 
-    println!("{}", get_energy(moons));
+    println!("result {}", _get_energy(moons));
+}
+
+fn part2() {
+    // sample 1
+    // result 2772
+    //let data = data::_get_sample1();
+
+    // sample 2
+    // result 4686774924
+    // about 6 minutes run time using `cargo run release`
+    //let data = data::_get_sample2();
+
+    // puzzle data
+    // result ???
+    let data = data::get_data();
+
+    let moons = &mut get_moons(data);
+    let initial_moons = (*moons).clone();
+    let mut steps: u64 = 0;
+
+    while {
+        steps += 1;
+        simulate_step(moons);
+
+        if steps % 100_000_000 == 0 {
+            println!("{}", steps);
+        }
+
+        *moons != initial_moons
+    } {}
+
+    println!("result {}", steps);
 }
 
 fn get_moons(data: &str) -> Vec<Moon> {
@@ -69,7 +108,7 @@ fn simulate_step(moons: &mut Vec<Moon>) {
     }
 }
 
-fn get_energy(moons: &Vec<Moon>) -> i32 {
+fn _get_energy(moons: &Vec<Moon>) -> i32 {
     let mut energy = 0;
 
     for moon in moons {
