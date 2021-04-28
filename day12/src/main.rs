@@ -7,11 +7,11 @@ struct Moon {
 }
 
 fn main() {
-    //_part1();
+    //part1();
     part2();
 }
 
-fn _part1() {
+fn part1() {
     // sample 1
     // result 179
     //let data = data::_get_sample1();
@@ -28,7 +28,7 @@ fn _part1() {
         simulate_step(moons);
     }
 
-    println!("result {}", _get_energy(moons));
+    println!("result {}", get_energy(moons));
 }
 
 fn part2() {
@@ -38,29 +38,54 @@ fn part2() {
 
     // sample 2
     // result 4686774924
-    // about 6 minutes run time using `cargo run release`
     //let data = data::_get_sample2();
 
     // puzzle data
-    // result ???
+    // result 295693702908636
     let data = data::get_data();
 
     let moons = &mut get_moons(data);
-    let initial_moons = (*moons).clone();
-    let mut steps: u64 = 0;
+    let initial_moons = &(*moons).clone();
 
-    while {
-        steps += 1;
-        simulate_step(moons);
+    /*
+    I think the trick here is that the axis are fully independent.
+    They don't effect each other. So while this looks like
+    https://benchmarksgame-team.pages.debian.net/benchmarksgame/description/nbody.html
+    it really isn't.
 
-        if steps % 100_000_000 == 0 {
-            println!("{}", steps);
+    So I can calculate when each axis first repeats, then calculate the Least Common Multiple.
+    */
+    for axis in 0..3 {
+        let mut steps: u64 = 0;
+
+        while {
+            steps += 1;
+            simulate_step_axis(moons, axis);
+
+            !axis_identical(axis, moons, initial_moons)
+        } {}
+
+        println!("axis {}: {} steps", axis, steps);
+    }
+
+    /*
+    I just tossed the three numbers this output into
+    https://www.calculatorsoup.com/calculators/math/lcm.php to get my answer.
+    */
+}
+
+fn axis_identical(axis: usize, moons: &Vec<Moon>, initial_moons: &Vec<Moon>) -> bool {
+    for (moon, initial_moon) in moons.iter().zip(initial_moons) {
+        if moon.pos[axis] != initial_moon.pos[axis] {
+            return false;
         }
 
-        *moons != initial_moons
-    } {}
+        if moon.vel[axis] != initial_moon.vel[axis] {
+            return false;
+        }
+    }
 
-    println!("result {}", steps);
+    true
 }
 
 fn get_moons(data: &str) -> Vec<Moon> {
@@ -85,30 +110,32 @@ fn get_moons(data: &str) -> Vec<Moon> {
 }
 
 fn simulate_step(moons: &mut Vec<Moon>) {
+    for axis in 0..3 {
+        simulate_step_axis(moons, axis);
+    }
+}
+
+fn simulate_step_axis(moons: &mut Vec<Moon>, axis: usize) {
     // update velocities
     for i in 0..moons.len()-1 {
         for j in i+1..moons.len() {
-            for axis in 0..3 {
-                if moons[i].pos[axis] < moons[j].pos[axis] {
-                    moons[i].vel[axis] += 1;
-                    moons[j].vel[axis] -= 1;
-                } else if moons[i].pos[axis] > moons[j].pos[axis] {
-                    moons[i].vel[axis] -= 1;
-                    moons[j].vel[axis] += 1;
-                }
+            if moons[i].pos[axis] < moons[j].pos[axis] {
+                moons[i].vel[axis] += 1;
+                moons[j].vel[axis] -= 1;
+            } else if moons[i].pos[axis] > moons[j].pos[axis] {
+                moons[i].vel[axis] -= 1;
+                moons[j].vel[axis] += 1;
             }
         }
     }
 
     // update positions
     for moon in moons {
-        for axis in 0..3 {
-            moon.pos[axis] += moon.vel[axis];
-        }
+        moon.pos[axis] += moon.vel[axis];
     }
 }
 
-fn _get_energy(moons: &Vec<Moon>) -> i32 {
+fn get_energy(moons: &Vec<Moon>) -> i32 {
     let mut energy = 0;
 
     for moon in moons {
