@@ -54,6 +54,12 @@ impl Computer {
     }
 
     #[allow(dead_code)]
+    pub fn clear_input(&mut self) {
+        self.input_ints = vec!();
+        self.inputs_read = 0;
+    }
+
+    #[allow(dead_code)]
     pub fn set_print_output(&mut self, print_output: bool) {
         self.print_output = print_output;
     }
